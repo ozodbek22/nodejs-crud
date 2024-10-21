@@ -12,9 +12,13 @@ function createUser(request, response) {
         body += chunk.toString();
     });
     request.on('end', () => {
-        const { username, age, hobbies } = JSON.parse(body);
+        const username = JSON.parse(body).username;
+        const age = JSON.parse(body).age;
+        const hobbies = JSON.parse(body).hobbies;
+
         const newUser = { id: uuidv4(), username, age, hobbies };
         users.push(newUser);
+
         response.writeHead(201, {'Content-Type': 'application/json'});
         response.end(JSON.stringify(newUser));
     });
@@ -33,8 +37,7 @@ function getSingleUser(request, response) {
         response.writeHead(200, {'Content-Type': 'application/json'});
         response.end(JSON.stringify(user));
     } else {
-        response.writeHead(404, {'Content-Type': 'application/json'});
-        response.end(JSON.stringify({message: 'User not found'}));
+        notFoundUser(response);
     }
 }
 
@@ -47,28 +50,36 @@ function updateUser(request, response) {
     request.on('end', () => {
         const index = users.findIndex(u => u.id === id);
         if (index !== -1) {
-            const { username, age, hobbies } = JSON.parse(body);
+            const username = JSON.parse(body).username;
+            const age = JSON.parse(body).age;
+            const hobbies = JSON.parse(body).hobbies;
+
             users[index] = { ...users[index], username, age, hobbies };
             response.writeHead(200, {'Content-Type': 'application/json'});
             response.end(JSON.stringify(users[index]));
         } else {
-            response.writeHead(404, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({message: 'User not found'}));
+            notFoundUser(response);
         }
     });
 }
 
 function deleteUser(request, response) {
     const id = request.url.split('/')[2];
+    // console.log(id);
     const index = users.findIndex(u => u.id === id);
+    // console.log(index);
     if (index !== -1) {
         const deletedUser = users.splice(index, 1)[0];
         response.writeHead(200, {'Content-Type': 'application/json'});
         response.end(JSON.stringify(deletedUser));
     } else {
-        response.writeHead(404, {'Content-Type': 'application/json'});
-        response.end(JSON.stringify({message: 'User not found'}));
+        notFoundUser(response);
     }
+}
+
+function notFoundUser(response) {
+    response.writeHead(404, {'Content-Type': 'application/json'});
+    response.end(JSON.stringify({message: 'Not Found'}));
 }
 
 const server = http.createServer((req, res) => {
